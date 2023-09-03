@@ -5,5 +5,5 @@
 ### Run the web app
 
 ```shell
-ruby cli.rb
+ruby app.rb
 ```
