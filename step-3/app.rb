@@ -1,6 +1,9 @@
-require "dotenv/load"
+require "dotenv"
+Dotenv.load("../.env")
+
 require "active_record"
 require "neighbor"
+require "sinatra"
 
 require_relative "src/open_ai_api"
 require_relative "src/content_item"
@@ -14,10 +17,11 @@ ActiveRecord::Base.establish_connection(
 
 open_ai_api = OpenAiApi.new
 
-question = nil
-while question != "quit"
-  print ("==> ")
-  question = gets.chomp
-  break if question == "quit"
-  puts open_ai_api.ask_question(question)
+get "/" do
+  erb :index
+end
+
+post "/" do
+  @reply = open_ai_api.ask_question(params[:prompt])
+  erb :index
 end

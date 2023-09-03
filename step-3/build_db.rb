@@ -1,4 +1,6 @@
-require "dotenv/load"
+require "dotenv"
+Dotenv.load("../.env")
+
 require "active_record"
 require "neighbor"
 
