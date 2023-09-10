@@ -3,6 +3,7 @@ Dotenv.load("../.env")
 
 require "active_record"
 require "neighbor"
+require "nokogiri"
 
 require_relative "src/open_ai_api"
 require_relative "src/content_item"
@@ -19,7 +20,6 @@ ActiveRecord::Schema.define do
   enable_extension "vector"
 
   create_table :content_items, force: true do |t|
-    t.string :page
     t.text :content
     t.vector :embedding, limit: 1536
 
@@ -27,5 +27,15 @@ ActiveRecord::Schema.define do
   end
 end
 
-json = JSON.parse(File.read("languages.json"))
-VectorDatabase.new.load(json)
+vector_db = VectorDatabase.new
+md_files = Dir.glob("gds-way/source/**/*.html.md.erb")
+puts "Loading #{md_files.count} files..."
+
+md_files.each do |md_file|
+  puts "Processing : #{md_file}"
+  md = File.read(md_file)
+
+  vector_db.load(md)
+
+  sleep 20.seconds
+end

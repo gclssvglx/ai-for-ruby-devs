@@ -1,0 +1,299 @@
+---
+title: Python style guide
+last_reviewed_on: 2023-07-19
+review_in: 6 months
+owner_slack: '#python'
+---
+
+# <%= current_page.data.title %>
+
+This manual is designed to aid developers in writing Python code that is clear
+and consistent, within, and across, projects at GDS.
+
+* [Code formatting](#code-formatting)
+* [Maximum line length of 120 characters](#maximum-line-length-of-120-characters)
+* [Linting](#linting)
+* [Environments](#environments)
+* [Dependencies](#dependencies)
+
+## Code formatting
+
+We follow [PEP 8][]; where PEP 8 does not express a view (for example, on the usage of
+language features such as metaclasses) we defer to the [Google Python style guide][GPSG].
+Use these as references unless something is explicitly mentioned here. These rules should be followed in conjunction with the advice on consistency
+on the main [programming languages manual page][gds-way-code-style-guides].
+
+If you want to add a new rule or exception please create a pull request against this repo.
+
+### Maximum line length of 120 characters
+
+[PEP 8] dictates a preferred maximum line length of <= 79. This is is a hangover from
+developing in a Unix terminal window. The vast majority of developers are now using an
+IDE which can handle a greater line length.
+
+Couple this with the fact that much of the time GDS developers are coding web apps and
+have to deal with nested `JSON` objects, ORM model definitions/ queries, and error/ url
+strings and this convention begins to show its age.
+
+```
+Do not do
+
+if not models.Address.query(
+    models.Address.street_address_line_1
+    == user['address']['street_address_line_1']
+):
+    pass
+
+
+Do
+
+if not models.Address.query(models.Address.street_address_line_1 == user['address']['street_address_line_1']):
+    pass
+```
+
+
+## Linting
+
+
+### Flake8
+
+This manual advises the use of the [Flake8][] command line checker as an all in one lint, codestyle and complexity checker.
+
+#### How to use Flake8
+
+Implementation of [Flake8][] will depend on whether the repository you want to run the checks on is a module or an application,
+and how your dependencies, automated testing, and continiuous integration are set up.
+
+First you should add the Flake8 module (available from [PyPI][]) to your 'dev' or 'test' requirements/dependencies.
+
+You'll then likely want to run it alongside your unit tests.
+
+#### Plugins
+
+Flake8 has been designed to be extensible and has numerous plugins. They're worth a look to see if
+any would be particularly beneficial to your code base.
+
+Examples include checks for requiring copyright/licensing strings, requiring docstrings
+or warnings for upcoming deprecations.
+
+A list can be found [by performing a PyPI search.][flake8-plugins]
+
+#### Flake8 per file ignores
+
+A particularly useful feature of Flake8 is the ability to specify rule
+exemptions on a per directory, per file, or per regex match basis.
+
+Commonly it's used for ignoring unused imports in module level `__init__.py`
+files or imports not being at the top of a file in settings files or scripts.
+
+The feature is documented in the Flake8 options documentation, under
+[per-file-ignores][flake8-per-file-ignores]. You can also see an example in the 
+[Digital Marketplace API repo][DMAPI-flake8-config].
+
+
+#### Common Configuration
+
+Digital Marketplace is already running the latest version of [Flake8][] on all
+of its repos.  You can find an example of their configuration in the root of
+any repo in the [`.flake8` file][DMAPI-flake8-config].
+
+
+Commonly a configuration file will live in the root of the package. By default [Flake8][] will look for a
+`.flake8` file in each directory.
+
+```
+[flake8]
+# Rule definitions: https://flake8.pycqa.org/en/latest/user/error-codes.html
+# D203: 1 blank line required before class docstring
+# W503: line break before binary operator
+exclude = venv*,__pycache__,node_modules,bower_components,migrations
+ignore = D203,W503
+max-complexity = 9
+max-line-length = 120
+```
+
+In the above file we exclude directories we want the checker to ignore completely, ignore specific rules we disagree with,
+set the maximum line length and set the maximum complexity. We've also included comments detailing what the specific exclusions
+are.
+
+Note: you can also ignore rules on particular lines of code or files by adding a `# noqa` comment - see [flake8's noqa syntax][flake8-noqa].
+
+#### Additional flake8 resources
+
+* [Digital Marketplace Config][DMAPI-flake8-config]: A production config to base off
+* [Flake8 error codes list][flake8-error-codes-list]
+* [Flake8 plugins list][flake8-plugins]
+    
+### isort
+    
+[isort][] is a command line tool that sorts and formats imports. It groups the imports according to pep8 recommendations, and
+automatically sorts imports and lines alphabetically to keep git diffs sensible.
+
+You can run `isort` locally to fix imports before commiting. 
+You should add a check-only command to your test script to ensure imports are correct on PRs.
+
+```bash
+isort --check-only
+```
+   
+Here's an example configuration, as taken from the `setup.cfg` file in [notify's API repo][notify-isort-cfg].
+    
+```
+[isort]
+line_length=80
+indent='    '
+multi_line_output=3
+known_third_party=notifications_utils,notifications_python_client
+known_first_party=app,tests
+include_trailing_comma=True
+use_parentheses=True
+```
+
+## Environments
+
+This manual advises the use of [Pyenv](https://github.com/pyenv/pyenv) to manage different versions of Python you have installed.
+For more information see [Intro to pyenv](https://realpython.com/intro-to-pyenv)
+
+Use the pyev plugin [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv) to manage virtual python environment.
+For more information see [Python virtual environment primer](https://realpython.com/python-virtual-environments-a-primer/)
+
+[direnv](https://direnv.net/) is used to manage environment variables. 
+This ensures project specific variables do not clutter your main environment or the environment of other projects.
+direnv uses `.envrc` for general project specific variables and you can use a non version controlled `.secrets` to store sensitive information.
+
+## Dependencies
+
+A Python application project typically brings together Python packages from PyPI, with
+others written in-house (or otherwise not distributed through PyPI).
+
+These packages are the applications immediate dependencies. Additionally, any
+package can have its own immediate dependencies, where they draw on other
+packages. From an application's point of view, the dependencies of the packages
+it requires are its sub-dependencies.
+
+The below diagram shows a simplified view of the resulting pyramid of dependencies;
+however it is important to note that the hierarchy can repeat itself infinitely.
+
+```
+                               Application
+
+                                    |
+                              +-----+-----+
+                              |     |     |
+
+                          Immediate dependencies
+
+                              |     |     |
+                        +--+--+--+--+--+--+--+--+
+                        |  |  |  |  |  |  |  |  |
+
+                         ... Sub-dependencies ...
+```
+
+There are two ways of specifying dependencies in Python world: as a specific version or
+as an allowable range.
+
+Different considerations apply to dependency management depending whether you are packaging a library, or creating
+an end-product such as an application or a bundle of scripts. In general, you should only specify specific versions
+when creating a Python system that sits at the top of the dependency pyramid; otherwise there is a danger of creating
+version conflicts.
+
+### Applications
+
+These recommendations apply wherever you need a reproducible set of dependencies, such
+as a complete web application, perhaps with many dependencies and sub-dependencies. It also
+applies to a collection of scripts that are deployed into the cloud and run automatically
+(for example, batch jobs).
+
+A good strategy for specifying your application's Python dependencies has two desirable
+characteristics - they should be:
+
+1. Reproducible (predictable)
+
+    Pin your application's full dependencies – specific versions, rather than ranges – or you'll
+    get unpredictability between your dev environment and other environments. You want a
+    new starter to avoid small hard-to-spot problems. And you want parity between what you
+    test locally, what is tested by CI, and what you deploy, or you risk new issues appearing on
+    a live server. Additionally these things can be hard to diagnose.
+
+2. Kept up-to-date
+
+    Security issues are found in libraries, so it is important to choose libraries that are
+    maintained and to ensure your team has a strategy to ensure security updates are installed
+    without significant delay. The [how to manage third party software dependencies][gds-way-deps] section
+    gives further context and discusses tools that can help, such as [snyk.io][].
+
+Your README should document an easy-to-follow process by which all your Python
+dependencies can be upgraded to get bug fixes and security fixes, without introducing
+breaking changes to your build.
+
+Your pinned dependencies should be fully specified in a file called `requirements.txt`, and checked
+into your version control system (VCS). For projects with only a small number of dependencies, maintaining
+this manually (for example, installing with `pip install`, then using `pip freeze`) may be adequate.
+    
+For larger projects, GDS recommends using [pip-tools][pip-tools] for managing dependencies.
+
+Put your top-level requirements in a `requirements.in` file, and then use `pip-compile` to generate a
+`requirements.txt` file. Both the .in and .txt files should be commited to your repository.
+
+List dependencies only needed for development or testing into a separate `requirements-dev.txt` file.
+
+### Libraries
+
+This recommendation applies to any Python repository that intended to be installable (into
+a virtual environment, a container, or onto bare metal) as a dependency of some larger system
+or application. It may be applicable to repositories that provide scripts to be run by
+developers or other end-users, but is not recommended for code that's intended to be deployed
+on its own into the cloud.
+
+Use a [`setup.py`][setup-deps]
+to specify the dependencies of your library, and the version ranges with which it
+can be reasonably expected to work.
+
+- The range you choose will depend on the guarantees each dependency makes about
+  backward-compatibility. For example, if you're currently using version 1.3.1 of
+  a semantically-versioned library, it would be reasonable to specify a range such
+  as `<2.0,>=1.3.1`. However, for a library that does not make that guarantee,
+  you might specify a more restricted range, such as `<1.4,>=1.3.1`.
+
+- Update this file whenever you are ready to test and validate a new version that falls
+  outside the existing range.
+
+> If you have dependencies that are not available on PyPI (for example, because you've fixed
+> a bug by forking the code), then you can use a [PEP 440][]
+> git reference in your `install_requires` list.
+>
+> - This requires pip 18.1, and we have not tried it much at GDS.
+>
+> - In the past, we've documented such dependencies in a `requirements.txt` file
+> ([example](https://github.com/alphagov/digitalmarketplace-utils/commit/dc16012af6b55d9eda4e8dd7fee514103682a5c7#diff-4d7c51b1efe9043e44439a949dfd92e5827321b34082903477fd04876edb7552)),
+> but any application wanting to depend on your library then needs to manually copy those sub-dependencies into its
+> own list
+> ([example](https://github.com/alphagov/digitalmarketplace-briefs-frontend/commit/5fb3df85bf9fa109ba3eaf1750a4fba4e92ef2a8#diff-4d7c51b1efe9043e44439a949dfd92e5827321b34082903477fd04876edb7552)).
+
+Specify dependencies needed only for testing your library in `tox.ini` if you are using [Tox](https://tox.readthedocs.io/en/latest/)
+([example](https://github.com/alphagov/notifications-python-client/blob/f27b67a53371c68c36583f985c29b0526e2294b9/tox.ini)),
+or in a `requirements-dev.txt` ([example](https://github.com/alphagov/digitalmarketplace-utils/blob/222e50c022eae4d9b2569b148cdfc642b08733cf/requirements-dev.txt))
+file otherwise.
+
+[PyPI]: https://pypi.org/
+[gds-way-deps]: /standards/tracking-dependencies.html
+[gds-way-code-style-guides]: /manuals/programming-languages.html
+[slack-python]: https://gds.slack.com/messages/python
+[GPSG]: https://google.github.io/styleguide/pyguide.html
+
+[snyk.io]: https://snyk.io/
+[setup-deps]: https://docs.python.org/3/distutils/setupscript.html#relationships-between-distributions-and-packages
+
+[PEP 8]: https://www.python.org/dev/peps/pep-0008/
+[PEP 440]: https://www.python.org/dev/peps/pep-0440/#direct-references
+
+[Flake8]: https://flake8.pycqa.org/en/latest/
+[DMAPI-flake8-config]: https://github.com/alphagov/digitalmarketplace-api/blob/main/.flake8
+[flake8-per-file-ignores]: https://flake8.pycqa.org/en/latest/user/options.html#cmdoption-flake8-per-file-ignores
+[flake8-plugins]: https://pypi.org/search/?q=plugin&o=-zscore&c=Framework+%3A%3A+Flake8
+[flake8-error-codes-list]: https://flake8.pycqa.org/en/latest/user/error-codes.html
+[flake8-noqa]: https://flake8.pycqa.org/en/latest/user/violations.html#in-line-ignoring-errors
+
+[isort]: https://pypi.org/project/isort/
+[notify-isort-cfg]: https://github.com/alphagov/notifications-api/blob/e497cbbec657606d62d8fb90255f5b68ec7f7ac2/setup.cfg#L12-L19

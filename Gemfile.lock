@@ -28,9 +28,14 @@ GEM
     neighbor (0.3.0)
       activerecord (>= 6.1)
     nio4r (2.5.9)
+    nokogiri (1.15.4-x86_64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.15.4-x86_64-linux)
+      racc (~> 1.4)
     pg (1.5.3)
     puma (6.3.1)
       nio4r (~> 2.0)
+    racc (1.7.1)
     rack (2.2.8)
     rack-protection (3.1.0)
       rack (~> 2.2, >= 2.2.4)
@@ -55,6 +60,7 @@ DEPENDENCIES
   activerecord
   dotenv
   neighbor
+  nokogiri
   pg
   puma
   ruby-openai

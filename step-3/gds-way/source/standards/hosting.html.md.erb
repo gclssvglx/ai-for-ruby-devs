@@ -1,0 +1,42 @@
+---
+title: How to host a service
+last_reviewed_on: 2023-03-22
+review_in: 6 months
+---
+
+# <%= current_page.data.title %>
+
+You should use the following cloud platform to host your service:
+
+* [Amazon Web Services (AWS)](https://aws.amazon.com) for scalable computing, storage and deployment services
+
+We follow the [Government Cloud First policy](https://www.gov.uk/guidance/government-cloud-first-policy) and use Infrastructure as a Service (IaaS) solutions to host our services rather than using our own hardware.
+
+We have assessed our choice of cloud platforms to make sure they:
+
+* are highly scalable and available to meet the needs of service users
+* have automated tools for GDS administrators to manage their environments
+
+See the [Service Manual](https://www.gov.uk/service-manual/technology/deciding-how-to-host-your-service) for more information on how to host your service.
+
+## Hosting using containers
+
+We don’t have any agreed practices for hosting using containers, but currently:
+
+* GOV.UK Verify and GOV.UK Pay are running in AWS ECS Fargate
+* GOV.UK are replatforming to Kubernetes and we expect more codified practices to come out of that
+
+## Serverless hosting
+
+We similarly don’t have agreed practices for serverless hosting, but currently:
+
+* GOV.UK Sign In is running using AWS Lambda, DynamoDB, API Gateway, and similar serverless services
+
+## Consider vendor switching costs
+
+AWS has a large number of available services. Some services, such as compute capacity and email and file storage, are common to other cloud providers. Other services are specific to AWS.
+
+You should be aware that it’s generally easier, quicker and cheaper to switch from common AWS services to other suppliers than from AWS-only services. For example, it is more difficult to migrate a web API service to another provider if the API is built using [Amazon API Gateway](https://aws.amazon.com/api-gateway/) instead of as a traditional web application and then deployed to EC2.
+
+You could also use a Lambda function to ship [AWS
+CloudTrail](https://aws.amazon.com/cloudtrail/) activity logs to a log provider such as Logit. It would not make sense to rewrite a Lambda function to run on EC2 hardware because this would not reduce your switching costs.

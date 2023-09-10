@@ -1,19 +1,14 @@
 class VectorDatabase
-  attr_reader :open_ai_api
+  attr_reader :open_ai_api, :debug
 
   def initialize
     @open_ai_api = OpenAiApi.new
+    @debug = false
   end
 
-  def load(json)
-    json.each do |item|
-      page = item["page"]
-      content = item["content"]
-
-      embedding = open_ai_api.get_embedding_for(content)
-      ContentItem.create!(page: page, content: content, embedding: embedding)
-
-      sleep 20.seconds # Free API accounts are limited to 3 requests per minute
-    end
+  def load(content)
+    embedding = open_ai_api.get_embedding_for(content)
+    puts embedding if debug
+    ContentItem.create!(content: content, embedding: embedding)
   end
 end
