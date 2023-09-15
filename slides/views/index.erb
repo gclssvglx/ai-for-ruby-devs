@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Slides</title>
+
+    <style type="text/css">
+      body {
+        overflow: hidden;
+        font-family: "Helvetica", "Arial", sans-serif;
+        background-color: #ebebeb;
+        color: black;
+        font-size: 32px;
+      }
+
+      .title {
+        background-color: #1d70b8;
+        color: white;
+      }
+
+      .title h1 {
+        font-size: 120px;
+      }
+
+      pre {
+        font-family: 'Courier New', monospace;
+        color: white;
+        background-color: black;
+        overflow: scroll;
+        height: 70vh;
+      }
+
+      code {
+        padding: 10px;
+      }
+
+      .content {
+        padding: 10vh 20vh;
+      }
+
+      .footer {
+        top: 90vh;
+        width: 100%;
+        position: absolute;
+        background-color: #1d70b8;
+        height: 10vh;
+        color: white;
+        text-align: right;
+        font-size: 6vh;
+      }
+
+      .footer a {
+        text-decoration: none;
+        color: white;
+      }
+
+      .line_no {
+        width: 30px;
+        display: inline-block;
+        margin: 0px 10px 0px 20px;
+        color: #53585f;
+      }
+
+      section {
+        height: 100vh;
+        width: 100%;
+        position: absolute;
+        z-index: 0;
+        background-color: #ebebeb;
+      }
+
+      section:target {
+        z-index: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <% slides = Dir.glob("**/slide_*.erb") %>
+
+      <% slide_min = slides.first.split("_").last.to_i %>
+      <% slide_max = slides.last.split("_").last.to_i %>
+
+      <% slides.each do |slide| %>
+        <% slide = slide.gsub("views/", "").gsub(".erb", "") %>
+        <% slide_num = slide.split("_").last.to_i %>
+        <% next_slide = slide_num + 1 %>
+        <% prev_slide = slide_num - 1 %>
+
+        <section id="<%= slide %>" <% if slide_num == 0 %>class="title"<% end %>>
+          <div class="content">
+            <%= erb slide.to_sym %>
+          </div>
+
+          <div class="footer">
+            <% unless prev_slide < slide_min %>
+              <a href="#slide_<%= prev_slide %>">&lt;</a>
+            <% end %>
+            <% unless next_slide > slide_max %>
+              <a href="#slide_<%= next_slide %>">&gt;</a>
+            <% end %>
+          </div>
+        </section>
+
+      <% end %>
+    </main>
+  </body>
+</html>
