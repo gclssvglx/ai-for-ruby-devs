@@ -33,7 +33,7 @@ postgres=# \q
 
 ### Populate the database 
 
-Please note - if you are using a free OpenAI API account, requests are limited to 3 per minute. Because of this we are forced to add a `sleep 20.seconds` after each API call. If you're using a paid-for account you can simply remove this line.
+Please note - if you are using a free OpenAI API account, requests are limited to 3 per minute. Because of this we are forced to add a `sleep 20.seconds` after each API call when building the Vector database. If you're using a paid-for account you can simply remove this line.
 
 We are going to be loading the entire Markdown content of all pages from [The GDS Way](https://gds-way.cloudapps.digital), which at the time of creation had 56 files, so this process will take 18 minutes to load and 'vectorise' all of the data.
 

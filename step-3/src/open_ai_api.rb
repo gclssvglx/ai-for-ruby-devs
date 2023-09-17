@@ -28,7 +28,7 @@ class OpenAiApi
       :embedding,
       get_embedding_for(question),
       distance: ENV["EMBEDDING_DISTANCE"]
-    ).first(5).map(&:content)
+    ).first(1).map(&:content)
   end
 
   def get_answer_to_question(prompt)

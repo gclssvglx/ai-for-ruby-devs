@@ -28,14 +28,8 @@ ActiveRecord::Schema.define do
 end
 
 vector_db = VectorDatabase.new
-md_files = Dir.glob("gds-way/source/**/*.html.md.erb")
-puts "Loading #{md_files.count} files..."
 
-md_files.each do |md_file|
-  puts "Processing : #{md_file}"
-  md = File.read(md_file)
-
-  vector_db.load(md)
-
+Dir.glob("gds-way/source/**/*.html.md.erb").each do |md_file|
+  vector_db.load(File.read(md_file))
   sleep 20.seconds
 end

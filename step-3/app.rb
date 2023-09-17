@@ -17,6 +17,8 @@ ActiveRecord::Base.establish_connection(
 
 open_ai_api = OpenAiApi.new
 
+set :port, 3003
+
 get "/" do
   erb :index
 end
