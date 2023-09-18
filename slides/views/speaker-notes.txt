@@ -1,126 +1,196 @@
 Slide 0
 
-Morning - for those of you who don't know me, I'm Graham a developer on GOV.UK and I'm part of the AI/GA4 team.
+Hi everyone - I'm Graham, a developer on GOV.UK.
 
-This is intended as a very quick introduction to AI for Ruby devs. Specifically, Generative AI. There will be quite a bit of code - most of which is surprisingly simple and easy to understand. In fact, most of it is simply calling an API. But, there are some gotcha's and new things and ways of writing code as well.
+This is a very quick introduction to AI for Ruby devs. Specifically, Generative AI - I'll explain what that is in a sec. There will be quite a bit of code - most of which is surprisingly simple and easy to understand. In fact, most of it is simply calling an API. But, there are some gotcha's, a load of new things to learn and some new ways of writing code as well.
 
-Due to the scale of the subject, I cannot hope to give you a full or through introduction. Please remember - I'm a developer, not a data scientist. So, I'll keep to the code as much as possible and leave the complex and messy sciencey details to other - more capable - members of the team.
+Due to the size and scale of the subject, I can't hope to give you a full or through introduction. Please also remember that I'm a developer, not a data scientist. So, I'll keep to the code as much as possible and leave the complex, messy sciencey stuff to other - more capable - folks.
 
-We'll take a 3 step approach. Starting with the most basic of applications and adding ideas and concepts in steps 2 and 3.
+My aim here is to cover the basics of writing an AI based app in Ruby. It should give you a head start when exploring the subject further on your own, and - I hope - give a start point for creating your own AI app.
 
-My aim is to cover the basics of writing an AI based app in Ruby. This I hope, will give you everything you need in order to explore the subject further on your own.
-
-As with all emerging areas of technology - there's a lot of new terminology and concepts to wrap your brain around. As you're probably aware, there is also a vast amount of hype - a lot of fear and many concerns over this technology. I'll let you make your own mind up on these issues. But I do hope to leave you slightly better informed.
 
 
 Slide 1
 
-So, about that terminology... Let's get that out of the way, so we can get to the code.
+As with all emerging areas of technology - there's a lot of new terminology and concepts to wrap your brain around.
 
-First up is Generative AI. Many of you - I'm sure - know of, or have messed about with Machine Learning. So, what's the difference between Generative AI and Machine Learning? It boils down to: Generative AI focuses on creating new content - Machine Learning on the other hand focuses on learning patterns and making predictions or decisions. Essentially, Generative AI can be considered as a subset or the application of Machine Learning.
-
-Next, is this thing called a Large Language Model or LLM. A large language model is a type of machine learning model that uses deep learning techniques and massively large data sets to understand, summarize, generate, and predict new content. They are trained using self-supervised and semi-supervised learning. LLMs use various natural language processing (NLP) techniques such as generating and classifying text, answering questions in a conversational manner, and translating text from one language to another.
-
-Most - if not all - LLMs have been ‘trained’ on content available on the internet. Which as we all know is full of: bias, lies, and fake content. What you may not know is sometimes the LLM will literally make-up an answer if it can’t find one - this is known as “hallucinating”.
+As you're probably aware, there is also a vast amount of hype around AI right now plus a lot of fear and numerous concerns over this technology. I'll let you make your own mind up on those issues. But I do hope to leave you slightly better informed.
 
 
-YOU ARE HERE >>>>>>>>
+Generative AI
 
-Vector database
+First up is Generative AI. Many of you - I'm sure - know of, or have messed about with Machine Learning. So, what's the difference between Generative AI and Machine Learning? It boils down to: Generative AIs focus on creating new content. Machine Learning on the other hand, focuses on how to improve the performance of tasks, without being explicitly programmed to do that.
+
+Essentially, Generative AI can be considered a subset - or the application of Machine Learning - specifically related to new content generation.
+
+
+Large Language Model (LLM)
+
+Next, is this thing called a Large Language Model or LLM. An LLM is a type of machine learning model that uses deep learning techniques (neural networks modeled in a similar way to the structure of the human brain), and massively large data sets, to understand, summarize, generate, and predict new content. They are trained using self-supervised and semi-supervised learning. LLMs use various Natural Language Processing (NLP) techniques such as generating and classifying text, answering questions in a conversational manner, and translating or transforming text from one language to another.
+
+
+Vectors
+
+Language modeling is the task of assigning a probability to a sequence of words in some text. Then, based on statistical analysis, it becomes possible to predict the word (or words) that are most likely to come next.
+
+This is where vectors come in.
+
+A vector is simply an array of floats which have been created by applying language modeling to some text.
+
 
 Embeddings
 
+This leads us to embeddings. These measure the relatedness of text strings by measuring the distance between two vectors. Small distances suggest high relatedness and large distances suggest low relatedness.
 
+
+
+Slide 2
+
+I'm going to take a 3 step approach. Each step adding ideas and concepts to the previous ones.
+
+Step 1 - is a simple CLI
+Step 2 - is a simple web app with a custom prompt
+Step 3 - is a simple web app with custom content
+
+
+
+Slide 3
+
+Why custom content?
+
+Most - if not all - LLMs have been ‘trained’ on content available on the internet. GTP-3 for example - which is one of the models we'll be using - was trained on nearly 236 million English documents from 5 different datasets - all taken from various internet sources.
+
+As we all know the internet is full of: bias, misinformation, and fake content. And that can creep into the models responses.
+
+Another issue is known as "hallucinating" - quite simply if the LLM cannot find the answer to your question, it will literally make one up.
+
+
+
+Slide 4
+
+So, what can we do about this?
+
+Two things essentially:
+
+- We can use an un-trained LLM and train it on the content we choose - this is very time-consuming and very costly
+
+- We can use a pre-trained LLM and send it the content we want it to base the answer on - tell it to do exactly that - and give it our question. This isn't perfect either, but is simpler and cheaper than the first option.
+
+Both approaches help solve these issues - to a greater or lesser degree. However, it's this second option that we'll be using.
+
+And what is our custom content? Something you're all familiar with - The GDS Way.
+
+
+Slide 5
+
+
+Enough theory already!
+
+
+
+Slide 6
+
+Demo
+
+
+
+Slide 7
+
+
+We're using the "gpt-3.5-turbo" as our CHAT_MODEL throughout.
+
+
+Role: "user"
+
+This refers to the entity that is interacting with the model. A 'user' in this context provides instructions or messages to the model, so can guide the conversation, ask questions, and make requests to the model. In other words, you can control the behavior and context of the conversation.
+
+
+The 'role' can take one of three values: 'system', 'user' or the 'assistant'
 
 
 Temperature
 
-In the context of the OpenAI API, temperature is a parameter that controls the randomness of the generated text. It affects the diversity of the output by determining how much the model should consider high probability tokens versus exploring other possibilities. A higher temperature value, such as 0.8, makes the output more random and creative because the model assigns similar probabilities to multiple tokens, resulting in a wider range of choices. This can lead to more varied and surprising responses. On the other hand, a lower temperature value, like 0.2, makes the output more focused and deterministic. The model tends to select the most likely tokens, resulting in more conservative and predictable responses. The choice of temperature depends on the desired trade-off between randomness and coherence in the generated text. Experimenting with different temperature values can help fine-tune the output to match specific requirements.
+
+Indicates the randomness and creativity of the responses. Basically, a number between 0 and 1.
+
+So, a temperature of 0 means the responses will be very similar, almost deterministic, while a temperature of 1 means the responses can vary wildly.
+
+We'll be using a temperature of 0.5.
+
+Notice that we're streaming the response to make the conversation more 'natural'.
 
 
-Role = User
 
-In the OpenAI API, the role of the user refers to the entity that interacts with the chat model. The user provides instructions or messages to the model, and the model generates a response based on those instructions. The user can guide the conversation, ask questions, or make requests to the model. By defining the role of the user, you can control the behavior and context of the conversation with the model.
+Slide 8
 
-
-
-Graham Lewis
-DeveloperGovernment Digital Service
-This is a title side
-
-AI for Ruby Devs
-This slide format is for headings or section breaks
-
-A 3 step - mostly - code-based introduction to this AI thing
-This should be what most of your slides look like
-
-Step 1 - a simple CLI
-This should be what most of your slides look like
-
-This should be what most of your slides look like
-
-A set of models that improve on GPT-3 and can understand as well as generate natural language or code
-
-The 'role' can take one of three values: 'system', 'user' or the 'assistant'
-
-Indicates the randomness and creativity of the responses
-
-It is always a number between 0 and 1
-
-A temperature of 0 means the responses will be very similar, almost deterministic, while a temperature of 1 means the responses can vary wildly
-
-Here we are streaming the response to make it a more natural ‘chat’ like experience
-
-Step 2 - a simple web app
-This should be what most of your slides look like
-
-Step 3 - a simple app with custom content
-This should be what most of your slides look like
-
-Custom content? Why?
+DO NOT DEMO HERE
 
 
-What can we do about it?
 
-There are 2 ways:
+Slide 9
 
-We can use an un-trained LLM and train it on the content we choose - this is very time-consuming and very costly
-We can use a pre-trained LLM and send it the content we want it to base the answer on - and tell it to do that - together with the question - this too has issues, but is simpler and cheaper than the first option - most folks seem to adopt this approach
-This should be what most of your slides look like
+So, we've moved our simple CLI to into a simple Sinatra web app.
 
-Our custom content…
+This is much the same as before, but with the addition of a custom prompt.
 
-We’re going to use the second approach using the content from The GDS Way
-This should be what most of your slides look like
+Let's see what that does...
 
-Embeddings and Vectors
+Demo
 
-To find the content most likely to answer our question, we need to search for content that sort-of matches it:
-Get your content (in our case a set of Markdown files)
-Create an embedding - Vectorised form - of that content - basically an array of numbers
-Stuff the content and the embeddings into a Vector-enabled database
-Create an embedding for our question
-Search the Vector database for the nearest matches - or neighbours 
-This should be what most of your slides look like
 
-Embeddings 
 
-OpenAI’s text embeddings measure the relatedness of text strings. Embeddings are commonly used for:
-Search (where results are ranked by relevance to a query string)
-Clustering (where text strings are grouped by similarity)
-Recommendations (where items with related text strings are recommended)
-Anomaly detection (where outliers with little relatedness are identified)
-Diversity measurement (where similarity distributions are analyzed)
-Classification (where text strings are classified by their most similar label)
-An embedding is a vector (list) of floating point numbers. The distance between two vectors measures their relatedness. Small distances suggest high relatedness and large distances suggest low relatedness. 
-This should be what most of your slides look like
+Slide 10
 
-It’s about now that we’ll hit API rate limits
+Demo - I'm going to demo this first, then we'll take a look at how this works.
 
-Tokens per request
-Requests per minute
-Requests per day
-This should be what most of your slides look like
+As I mentioned, we're using a pre-trained LLM - "gpt-3.5-turbo" - but this time we're using our own custom content - The GDS Way markdown files.
+
+First off, we need a database that can handle vectors - there are dedicated "vector databases", but we'll PostgeSQL with the PGVector extension installed.
+
+
+
+Slide 11
+
+Next we can create an ActiveRecord model that has knowledge of it's 'related' records - thanks to the "neighbor" gem.
+
+
+
+Slide 12
+
+
+With that sorted, we can create a simple table containing each GDS Way markdown file.
+
+This consists of the actual markdown content, plus a vectorised representation of it - it's embedding.
+
+Then we simply walk around each markdown file...
+
+Note the 'sleep 20.seconds' - we are using a FREE API key which is rate limited to 3 requests per second. So, yeah loading can take a while - about 18 minutes with the content.
+
+
+
+Slide 13
+
+Create our embedding for the markdown - we're using the snazzily name "text-embedding-ada-002" model as our EMBEDDING_MODEL at this point.
+
+And create our records.
+
+
+
+Slide 14
+
+This is where all the action happens...
+
+Notice the new and improved prompt, complete with what to answer with, if it can't find an answer in the content. An instruction as to how we want the question answered, the question and the context - more on that in a tick.
+
+The key method in the class is 'create_context'. This gets the nearest known neighbours, based on an embedding created form the question, and returns the content of the first one - this is the context.
+
+We could use a higher number of potentially related ContentItem's - more context - but again, we're using a FREE API key - which means we'll hit a token rate limit for every request.
+
+Essentially, a token is a numerical representaion of words or characters. You get roughly 4 characters per token, or 3/4 of a word. So, 100 tokens is about 75 words.
+
+And because we're asking the model to give us an answer based on the content we supply - we have to supply that content - which means tokens. So, the more context we send the more acurate the answer will be, but also the more expensive it will be in terms of tokens.
+
+
 
 Thanks!
 
@@ -128,13 +198,17 @@ Any questions…?
 
 
 
-
 Examples:
 
+Step 1/2
+
+Who is GDS?
 Tell me a joke
 How tall am I?
-Who is GDS?
 Who wrote Beethoven's ninth symphony?
+
+
+Step 3
 
 How should I document architectural decisions?
 How should I name software products?

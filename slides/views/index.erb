@@ -33,7 +33,6 @@
 
       code {
         padding: 10px;
-        font-size: 20pt;
       }
 
       .content {
@@ -54,12 +53,13 @@
       .footer a {
         text-decoration: none;
         color: white;
+        padding-right: 20px;
       }
 
       .line_no {
-        width: 30px;
+        width: 40px;
         display: inline-block;
-        margin: 0px 10px 0px 20px;
+        padding-left: 10px;
         padding-right: 10px;
         color: #53585f;
       }
@@ -81,15 +81,20 @@
   <body>
     <main>
       <% slides = Dir.glob("**/slide_*.erb") %>
-
-      <% slide_min = slides.first.split("_").last.to_i %>
-      <% slide_max = slides.last.split("_").last.to_i %>
-
+      <% slide_nums = [] %>
       <% slides.each do |slide| %>
         <% slide = slide.gsub("views/", "").gsub(".erb", "") %>
-        <% slide_num = slide.split("_").last.to_i %>
+        <% slide_nums << slide.split("_").last.to_i %>
+      <% end %>
+
+      <% slide_nums.sort! %>
+      <% slide_min = slide_nums.first %>
+      <% slide_max = slide_nums.last %>
+
+      <% slide_nums.each do |slide_num| %>
         <% next_slide = slide_num + 1 %>
         <% prev_slide = slide_num - 1 %>
+        <% slide = "slide_#{slide_num}" %>
 
         <section id="<%= slide %>" <% if slide_num == 0 %>class="title"<% end %>>
           <div class="content">
@@ -105,7 +110,6 @@
             <% end %>
           </div>
         </section>
-
       <% end %>
     </main>
   </body>

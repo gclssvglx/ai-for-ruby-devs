@@ -1,6 +1,6 @@
 require "sinatra"
 
-set :port, 8080
+set :port, 3001
 
 get "/" do
   erb :index
