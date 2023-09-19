@@ -1,1 +1,7 @@
-<h1>Time for some code</h1>
+<pre>
+<code>
+<% File.readlines("../step-2/app.rb", chomp: true).each.with_index(1) do |line, line_no| %>
+<span class="line_no"><%= line_no %></span> <%= line.chomp %>
+<% end %>
+</code>
+</pre>

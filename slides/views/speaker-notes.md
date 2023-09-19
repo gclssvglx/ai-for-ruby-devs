@@ -1,32 +1,46 @@
 ## Slide 0
 
-Hi everyone - I'm Graham, a developer on GOV.UK.
+This is a very quick introduction to Generative AI for Ruby devs.
 
-This is a very quick introduction to AI for Ruby devs. Specifically, Generative AI - I'll explain what that is in a sec. There will be quite a bit of code - most of which is surprisingly simple and easy to understand. In fact, most of it is simply calling an API. But, there are some gotcha's, a load of new things to learn and some new ways of writing code as well.
+There will be quite a bit of code - most is surprisingly simple and easy to understand.
 
-Due to the size and scale of the subject, I can't hope to give you a full or through introduction. Please also remember that I'm a developer, not a data scientist. So, I'll keep to the code as much as possible and leave the complex, messy sciencey stuff to other - more capable - folks.
+In fact, most of it is simply calling an API.
 
-My aim here is to cover the basics of writing an AI based app in Ruby. It should give you a head start when exploring the subject further on your own, and - I hope - give a start point for creating your own AI app.
+There are gotcha's, a load of new things to learn and some new ways of writing code as well.
+
+This is a large and growing area, so I can't hope to give you anything like a full or through introduction.
+
+Please also remember that I'm a developer, not a data scientist. I'll keep to the code as much as possible and leave the complex, messy sciencey stuff to other - more capable - folks.
+
+My aim is to cover the basics of writing a Generative AI based app in Ruby. It should give you a head start when exploring the subject further on your own, and - I hope - maybe a start point for your own app.
 
 
 
 ## Slide 1
 
-As with all emerging areas of technology - there's a lot of new terminology and concepts to wrap your brain around.
+As with all emerging technology - there's a lot of new terminology and concepts to wrap your brain around.
 
-As you're probably aware, there is also a vast amount of hype around AI right now plus a lot of fear and numerous concerns over this technology. I'll let you make your own mind up on those issues. But I do hope to leave you slightly better informed.
+As you're probably aware, there is also a vast amount of hype around AI right now plus a lot of fear and numerous concerns over this technology.
+
+I'll let you make your own mind up on these things. But I do hope that I can leave you slightly better informed.
 
 
 ### Generative AI
 
-First up is Generative AI. Many of you - I'm sure - know of, or have messed about with Machine Learning. So, what's the difference between Generative AI and Machine Learning? It boils down to: Generative AIs focus on creating new content. Machine Learning on the other hand, focuses on how to improve the performance of tasks, without being explicitly programmed to do that.
+Many of you - I'm sure - know of, or have messed about with Machine Learning. So, what's the difference between Generative AI and Machine Learning?
+
+It boils down to: Generative AIs focus on creating new content. Machine Learning on the other hand, focuses on how to improve the performance of tasks, without being explicitly programmed to do that.
 
 Essentially, Generative AI can be considered a subset - or the application of Machine Learning - specifically related to new content generation.
 
 
 ### Large Language Model (LLM)
 
-Next, is this thing called a Large Language Model or LLM. An LLM is a type of machine learning model that uses deep learning techniques (neural networks modeled in a similar way to the structure of the human brain), and massively large data sets, to understand, summarize, generate, and predict new content. They are trained using self-supervised and semi-supervised learning. LLMs use various Natural Language Processing (NLP) techniques such as generating and classifying text, answering questions in a conversational manner, and translating or transforming text from one language to another.
+A Large Language Model is a type of machine learning model that uses deep learning techniques (neural networks modeled in a similar way to the structure of the human brain), and massively large data sets, to understand, summarize, generate, and predict new content.
+
+They are trained using self-supervised and semi-supervised learning.
+
+LLMs use various Natural Language Processing (NLP) techniques such as generating and classifying text, answering questions in a conversational manner, and translating or transforming text from one language to another.
 
 
 ### Vectors
@@ -43,18 +57,7 @@ A vector is simply an array of floats which have been created by applying langua
 This leads us to embeddings. These measure the relatedness of text strings by measuring the distance between two vectors. Small distances suggest high relatedness and large distances suggest low relatedness.
 
 
-
-## Slide 2
-
-I'm going to take a 3 step approach. Each step adding ideas and concepts to the previous ones.
-
-- Step 1 - is a simple CLI
-- Step 2 - is a simple web app with a custom prompt
-- Step 3 - is a simple web app with custom content
-
-
-
-## Slide 3
+## Slide 7
 
 Why custom content?
 
@@ -66,7 +69,7 @@ Another issue is known as "hallucinating" - quite simply if the LLM cannot find 
 
 
 
-## Slide 4
+## Slide 8
 
 So, what can we do about this?
 
@@ -81,20 +84,6 @@ Both approaches help solve these issues - to a greater or lesser degree. However
 And what is our custom content? Something you're all familiar with - The GDS Way.
 
 
-## Slide 5
-
-
-Enough theory already!
-
-
-
-## Slide 6
-
-Demo
-
-
-
-## Slide 7
 
 
 We're using the "gpt-3.5-turbo" as our CHAT_MODEL throughout.
@@ -121,63 +110,6 @@ Notice that we're streaming the response to make the conversation more 'natural'
 
 
 
-## Slide 8
-
-DO NOT DEMO HERE
-
-
-
-## Slide 9
-
-So, we've moved our simple CLI to into a simple Sinatra web app.
-
-This is much the same as before, but with the addition of a custom prompt.
-
-Let's see what that does...
-
-Demo
-
-
-
-## Slide 10
-
-Demo - I'm going to demo this first, then we'll take a look at how this works.
-
-As I mentioned, we're using a pre-trained LLM - "gpt-3.5-turbo" - but this time we're using our own custom content - The GDS Way markdown files.
-
-First off, we need a database that can handle vectors - there are dedicated "vector databases", but we'll PostgeSQL with the PGVector extension installed.
-
-
-
-## Slide 11
-
-Next we can create an ActiveRecord model that has knowledge of it's 'related' records - thanks to the "neighbor" gem.
-
-
-
-## Slide 12
-
-
-With that sorted, we can create a simple table containing each GDS Way markdown file.
-
-This consists of the actual markdown content, plus a vectorised representation of it - it's embedding.
-
-Then we simply walk around each markdown file...
-
-Note the 'sleep 20.seconds' - we are using a FREE API key which is rate limited to 3 requests per second. So, yeah loading can take a while - about 18 minutes with the content.
-
-
-
-## Slide 13
-
-Create our embedding for the markdown - we're using the snazzily name "text-embedding-ada-002" model as our EMBEDDING_MODEL at this point.
-
-And create our records.
-
-
-
-## Slide 14
-
 This is where all the action happens...
 
 Notice the new and improved prompt, complete with what to answer with, if it can't find an answer in the content. An instruction as to how we want the question answered, the question and the context - more on that in a tick.
@@ -189,30 +121,3 @@ We could use a higher number of potentially related ContentItem's - more context
 Essentially, a token is a numerical representaion of words or characters. You get roughly 4 characters per token, or 3/4 of a word. So, 100 tokens is about 75 words.
 
 And because we're asking the model to give us an answer based on the content we supply - we have to supply that content - which means tokens. So, the more context we send the more acurate the answer will be, but also the more expensive it will be in terms of tokens.
-
-
-
-## Slide 15
-
-Thanks!
-
-Any questions…?
-
-
-
-## Examples:
-
-Step 1/2
-
-- Who is GDS?
-- Tell me a joke
-- How tall am I?
-- Who wrote Beethoven's ninth symphony?
-
-
-Step 3
-
-- How should I document architectural decisions?
-- How should I name software products?
-- Which programming language should I choose?
-- Which licence should I use?
