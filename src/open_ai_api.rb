@@ -39,6 +39,8 @@ class OpenAiApi
         temperature: ENV["CHAT_TEMPERATURE"].to_f
       }
     )
+    puts "You asked : #{prompt}"
+    puts "I answered : #{answer}"
     answer.dig("choices", 0, "message", "content") || answer.dig("error", "message")
   end
 

@@ -1,5 +1,5 @@
 require "dotenv"
-Dotenv.load("../.env")
+Dotenv.load
 
 require "active_record"
 require "neighbor"
@@ -17,7 +17,7 @@ ActiveRecord::Base.establish_connection(
 
 open_ai_api = OpenAiApi.new
 
-set :port, 3003
+set :port, 3000
 
 get "/" do
   erb :index

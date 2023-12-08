@@ -1,5 +1,5 @@
 require "dotenv"
-Dotenv.load("../.env")
+Dotenv.load
 
 require "active_record"
 require "neighbor"
@@ -31,5 +31,5 @@ vector_db = VectorDatabase.new
 
 Dir.glob("gds-way/source/**/*.html.md.erb").each do |md_file|
   vector_db.load(File.read(md_file))
-  sleep 20.seconds
+  # sleep 20.seconds
 end
