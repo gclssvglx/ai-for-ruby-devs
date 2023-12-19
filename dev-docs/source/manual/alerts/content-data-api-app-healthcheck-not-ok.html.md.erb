@@ -1,0 +1,171 @@
+---
+owner_slack: "#govuk-platform-security-reliability-team"
+title: content-data-api app healthcheck not ok
+section: Icinga alerts
+layout: manual_layout
+parent: "/manual.html"
+---
+
+See also: [how healthcheck alerts work on GOV.UK](app-healthcheck-not-ok.html)
+
+If there is a health check error showing for Content Data API, click
+on the alert to find out more details about what’s wrong.
+
+You can visit the [healthcheck endpoints](https://github.com/alphagov/content-data-api/blob/main/config/routes.rb)
+here:
+
+- [`healthcheck/metrics`](https://content-data-api.publishing.service.gov.uk/healthcheck/metrics)
+- [`healthcheck/search`](https://content-data-api.publishing.service.gov.uk/healthcheck/search)
+- [`healthcheck/ready`](https://content-data-api.publishing.service.gov.uk/healthcheck/ready)
+
+## What is the ETL process
+
+ETL stands for [Extract, Transform, Load][etl_definition].
+Every day, data is copied from multiple sources (the [publishing platform],
+[user feedback], and Google Analytics) into the Content Data API warehouse.
+
+A Rake task called [`etl:main`][etl_main] calls `Etl::Main::MainProcessor`
+which [processes all the data][etl_main_class]. This runs daily via a Kubernetes CronJob [`content-data-api-etl-cron-task`](https://argo.eks.production.govuk.digital/applications/cluster-services/content-data-api?node=batch%2FCronJob%2Fapps%2Fcontent-data-api-etl-cron-task), configured [via Helm values](https://github.com/alphagov/govuk-helm-charts/commit/31dd14e).
+
+There is also a special 're-run' Rake task called [`etl:rerun_main`][etl_rerun],
+which takes an inclusive range of dates as arguments and runs the same task
+as above but overwrites the previously held data for that date range. We can
+run this if we have reason to believe the historical data is missing or
+inaccurate.
+
+[Content Data]: /repos/content-data-admin.html
+[etl_definition]: https://en.wikipedia.org/wiki/Extract,_transform,_load
+[etl_main]: https://github.com/alphagov/content-data-api/blob/main/lib/tasks/etl.rake
+[etl_main_class]: https://github.com/alphagov/content-data-api/blob/main/app/domain/etl/main/main_processor.rb
+[etl_rerun]: https://github.com/alphagov/content-data-api/search?q=rerun_main+-path%3Aspec
+[publishing platform]: https://github.com/alphagov/publishing-api
+[user_feedback]: https://github.com/alphagov/feedback
+
+## When does ETL run
+
+The content_data_api cronjob [runs at](https://github.com/alphagov/govuk-helm-charts/pull/1068/files) approximately:
+
+* 7 am in production
+* 11 am in staging
+* 1 pm in integration
+
+These jobs are spread out for rate limiting reasons, and production is run
+outside of normal hours so as not to impact database performance during the day.
+
+There used to be a nightly content_data_api_re_run job that reprocessed
+data from the previous 48-72 hours. This job was added because there used to be
+a [delay of up to 48 hours in results showing up in Google
+Analytics][google_delay]. This is [no longer the
+case with GA4](https://support.google.com/analytics/answer/11198161?hl=en).
+
+[google_delay]: https://support.google.com/analytics/answer/1070983?hl=en#:~:text=Data%20processing%20latency,for%20up%20to%20two%20days
+
+## Troubleshooting
+
+Look for errors in the logs of the latest `content-data-api-etl-cron-task` Job [in Argo CD](https://argo.eks.production.govuk.digital/applications/cluster-services/content-data-api).
+
+You can also look for errors in [Sentry](https://sentry.io/organizations/govuk/issues/?environment=production&project=1461890) or by searching [logs in LogIt](https://reliability-engineering.cloudapps.digital/logging.html#get-started-with-logit).
+
+From the logs and the alert(s) that are firing, determine which data is missing/bad and for what date range. You can use the Rake tasks below to reprocess specific outputs for specific date ranges, or you can just re-run the whole job.
+
+> **All dates for the rake tasks below are inclusive.**
+> In other words, if you only need to reprocess data for a specific day, you’ll need
+> to use the same the date for both the 'from' and 'to' parameters
+> (for example: `etl:repopulate_aggregations_month\["2019-12-15","2019-12-15"]`).
+
+### ETL :: no monthly aggregations of metrics for yesterday
+
+The daily ETL cronjob failed to create the monthly aggregations.
+
+Run the following Rake task to reprocess the data:
+
+```
+k exec deploy/content-data-api -- etl:repopulate_aggregations_month\[YYYY-MM-DD,YYYY-MM-DD]
+```
+
+### ETL :: no <range> searches updated from yesterday
+
+The daily ETL cronjob failed to refresh the materialized views.
+
+Run the following Rake task to reprocess the data:
+
+```
+k exec deploy/content-data-api -- etl:repopulate_aggregations_search
+```
+
+### ETL :: no daily metrics for yesterday
+
+The daily ETL cronjob failed to retrieve metrics for content items.
+
+To fix this problem, re-run the main process:
+
+```
+k exec deploy/content-data-api -- etl:main
+```
+
+**Note** This will first delete any metrics that had been successfully
+retrieved before re-running the task to regather all metrics.
+
+### ETL :: no pviews/upviews for yesterday
+
+The daily ETL cronjob has failed to
+collect `pageview` or `unique pageview` metrics from Google Analytics. The issue may originate
+from the [ETL processor responsible for collecting core metrics](https://github.com/alphagov/content-data-api/blob/main/app/domain/etl/ga/views_and_navigation_processor.rb).
+
+Run the following Rake task to reprocess the data:
+
+```
+k exec deploy/content-data-api -- etl:repopulateviews\[YYYY-MM-DD,YYYY-MM-DD]
+```
+
+### ETL :: no searches for yesterday
+
+The daily ETL cronjob has failed to
+collect `number of searches` metrics from Google Analytics. The issue may
+originate from the [ETL processor responsible for collecting Internal Searches](https://github.com/alphagov/content-data-api/blob/main/app/domain/etl/ga/internal_search_processor.rb).
+
+Run the following Rake task to reprocess the data:
+
+```
+k exec deploy/content-data-api -- etl:repopulate_searches\[YYYY-MM-DD,YYYY-MM-DD]
+```
+
+### ETL :: no feedex for yesterday
+
+The daily ETL cronjob has failed to
+collect Feedback Explorer metrics from `support-api`. The issue may originate from the
+[ETL processor responsible for collecting Feedex comments](https://github.com/alphagov/content-data-api/blob/main/app/domain/etl/feedex/processor.rb).
+
+Run the following Rake task to reprocess the data:
+
+```
+k exec deploy/content-data-api -- etl:repopulate_feedex\[YYYY-MM-DD,YYYY-MM-DD]
+```
+
+### Other troubleshooting tips
+
+#### sidekiq_retry_size is above the warning threshold
+
+We have an ongoing issue where occasionally a Whitehall document is not successfully
+updated in the database, returning with a database conflict error.
+In the `content-data-api` you may find the first content item is (incorrectly)
+still considered `live: true`, and that the second content item doesn't exist.
+
+We are [notified of this error through Sentry](https://sentry.io/organizations/govuk/issues/1905340462/events/45b36be8d1054e3fa69e9e88085cb8d5/?project=1461890) as well as a `warning` Icinga
+alert on the `content-data-api` healthcheck, specifically that `sidekiq_retry_size
+- warning - 3 is above the warning threshold (1)` because `content-data-api` is
+unable to pull in data.
+
+To fix this and get the data successfully pulled into `content-data-api` you can
+apply this manual fix:
+
+```
+Dimensions::Edition.where(content_id: "b6a2a286-8669-4cbe-a4ad-7997608598d2")
+  .last
+  .update!(live: false, schema_name: "gone", document_type: "gone")
+```
+You can get the `base url` from the Sentry error and query the database for the
+`content_id`.
+
+Then the next time the Sidekiq worker runs, it should successfully be able to add
+the new content item.

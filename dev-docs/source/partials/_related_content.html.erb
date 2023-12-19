@@ -1,0 +1,53 @@
+<div class='related-content'>
+  <% if related_things.related_repos.any? %>
+    <h4>Related repositories</h4>
+
+    <ul class="govuk-list">
+    <% related_things.related_repos.each do |name, url| %>
+      <li><%= link_to name, url %></li>
+    <% end %>
+    </ul>
+  <% end %>
+
+  <% if related_things.any_related_pages? %>
+    <h3>More in the <%= current_page.data.section %> section</h3>
+
+    <div class='govuk-grid-row'>
+      <% if related_things.related_learning_pages.any? %>
+        <div class='govuk-grid-column-one-half'>
+          <h4>Learn</h4>
+
+          <ul class="govuk-list">
+          <% related_things.related_learning_pages.each do |page| %>
+            <li><%= link_to page.data.title, page.url %></li>
+          <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if related_things.related_task_pages.any? %>
+        <div class='govuk-grid-column-one-half'>
+          <h4>How to...</h4>
+
+          <ul class="govuk-list">
+          <% related_things.related_task_pages.each do |page| %>
+            <li><%= link_to page.data.title, page.url %></li>
+          <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if related_things.related_alerts.any? %>
+        <div class='govuk-grid-column-one-half'>
+          <h4>Related alerts...</h4>
+
+          <ul class="govuk-list">
+          <% related_things.related_alerts.each do |page| %>
+            <li><%= link_to page.data.title, page.url %></li>
+          <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

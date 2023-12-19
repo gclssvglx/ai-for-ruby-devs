@@ -1,0 +1,143 @@
+---
+owner_slack: "#govuk-publishing-platform"
+title: Manage assets
+section: Assets
+layout: manual_layout
+parent: "/manual.html"
+---
+
+## Removing an asset
+
+If you need to remove an asset manually from `assets.publishing.service.gov.uk`,
+follow these steps:
+
+1. Identify whether the asset was published using Whitehall or another application.
+
+   > An example Whitehall asset URL is `https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/12345/filename.pdf`.
+   >
+   > An example non-Whitehall asset URL is `https://assets.publishing.service.gov.uk/media/abcd1234efgh/filename.pdf`.
+
+   Decide if the asset can be marked as deleted or whether all traces need to be
+   removed (e.g. if it contains secret information). If all traces need to be
+   removed, append `,true` in the square brackets when running the rake tasks
+   below.
+
+   To mark the file as deleted, run one of the following Rake tasks:
+
+   Whitehall Assets, where `LEGACY_URL_PATH` is the document slug, i.e. `/government/uploads/system/uploads/attachment_data/file/12345/filename.pdf`
+   for the example above. The square brackets are part of the command, so don't remove them:
+   <%= RunRakeTask.links("asset-manager", "assets:whitehall_delete[LEGACY_URL_PATH]") %>
+
+   Other Assets, where `ASSET_ID` is the asset ID, i.e. `abcd1234efgh` from the
+   example above (keep the square brackets):
+   <%= RunRakeTask.links("asset-manager", "assets:delete[ASSET_ID]") %>
+
+1. Add a query string to the URL (e.g. `?cache-bust=12345`) to bypass the cache
+   and check that the asset responds with a 404 not found.
+
+1. Wait 20 minutes for the cache to clear, or [purge it yourself][clear-cache].
+
+1. Verify that the asset is not there without using query string.
+
+1. Request removal of the asset using the [Google Search Console](https://www.google.com/webmasters/tools/removals).
+
+1. Remove the asset from the Google Cloud Platform (GCP) mirror:
+   - Log into the [GCP console](https://console.cloud.google.com/).
+   - Go to the `GOVUK Production` project under the `DIGITAL.CABINET-OFFICE.GOV.UK`
+     organisation.
+   - Select `Cloud Storage -> Browser`, go to the [`govuk-production-mirror`
+     bucket][govuk-production-mirror-gcp].
+   - Navigate to the file, then delete it.
+
+1. Remove the asset from the Amazon Web Services (AWS) mirror:
+
+   `gds aws govuk-production-poweruser aws s3 rm s3://govuk-production-mirror/assets.publishing.service.gov.uk/<slug>`
+
+[clear-cache]: /manual/purge-cache.html#assets
+[govuk-production-mirror-gcp]: https://console.cloud.google.com/storage/browser/govuk-production-mirror;tab=objects?forceOnBucketsSortingFiltering=false&project=govuk-production
+
+## Redirecting an asset
+
+Sometimes it might be necessary to manually redirect an asset, for example if
+an associated document wasn't unpublished correctly. There are some Rake tasks
+available for this:
+
+<%= RunRakeTask.links("asset-manager", "assets:redirect[ASSET_ID,REDIRECT_URL]") %>
+<%= RunRakeTask.links("asset-manager", "assets:whitehall_redirect[LEGACY_URL_PATH,REDIRECT_URL]") %>
+
+## Uploading an asset
+
+Some publishing apps such as [Mainstream Publisher](/repos/publisher.html) do
+not provide the facility for editors to upload assets such as images and PDFs.
+In these rare cases, we can upload assets to asset-manager manually and give
+the URL to content editors to embed.
+
+Production assets are replicated to staging and integration nightly, so it is
+best to simply perform the upload directly in production. First, upload the
+asset to a backend machine:
+
+```sh
+$ gds govuk connect scp-push -e production aws/backend:1 my_file.jpg /tmp
+```
+
+Then SSH to the same machine and run the upload command:
+
+```sh
+$ gds govuk connect ssh -e production aws/backend:1
+$ cd /var/apps/asset-manager
+$ sudo -u deploy govuk_setenv asset-manager bin/create_asset /tmp/my_file.jpg
+```
+
+Note the `basepath` the script outputs. This should be appended to the asset
+host, for example:
+
+```
+https://assets.publishing.service.gov.uk/media/57358658ed915d58bd000000/my_file.jpg
+```
+
+## Replacing an asset
+
+If you need to replace the file of an existing attachment without
+changing the URL, follow these steps:
+
+0. Copy the new file from your computer to a `backend` server:
+
+    ```sh
+    $ gds govuk connect scp-push -e <environment> aws/backend:1 filename.ext /tmp
+    ```
+
+0. Get an app console on that same server:
+
+    ```sh
+    $ gds govuk connect ssh -e <environment> aws/backend:1
+    $ govuk_app_console asset-manager
+    ```
+
+0. Find the asset:
+
+    ```ruby
+    asset = Asset.find("asset-id-from-url") # e.g. `57a9c52b40f0b608a700000a`
+    # or for a Whitehall asset:
+    asset = WhitehallAsset.find_by(legacy_url_path: '/government/uploads/system/uploads/attachment_data/file/id/path.ext')
+    ```
+
+0. Check the asset is what you think it is.
+
+0. Replace the file (change 123 to the new attachment size in bytes):
+
+    ```ruby
+    asset.update(size: 123)
+    asset.file = Pathname.new("/tmp/filename.ext").open
+    asset.save!
+    ```
+
+0. For a Whitehall attachment, update the file size in Whitehall, where 123 is the new attachment size in bytes:
+
+   ```sh
+   $ gds govuk connect app-console -e <environment> whitehall_backend/whitehall
+   ```
+
+   ```ruby
+   attachment = Attachment.find_by(attachment_data_id: asset-id-from-url) # e.g. 123456
+   attachment.attachment_data.update(file_size: 123, number_of_pages: 28)
+   ```

@@ -1,0 +1,45 @@
+---
+layout: core
+title: Manual
+---
+
+<% content_for :sidebar do %>
+  <ul>
+    <li>
+      <a href="/manual.html">
+        <span>Manual</span>
+      </a>
+    </li>
+    <ul>
+      <% manual.manual_pages_grouped_by_section.each do |section_name, pages| %>
+        <li>
+          <a href="<%= "##{section_name.parameterize}" %>">
+            <span><%= section_name %></span>
+          </a>
+        </li>
+      <% end %>
+    </ul>
+  </ul>
+<% end %>
+
+<%= partial 'partials/header' %>
+
+<% manual.manual_pages_grouped_by_section.each do |section_name, pages| %>
+  <h2 id='<%= section_name.parameterize %>'><%= section_name %></h2>
+
+  <% pages.group_by { |page| page.data.type }.each do |type, pages| %>
+    <h3><%= type == "learn" ? "Learn" : "How to..." %></h3>
+    <ul>
+      <% pages.each do |page| %>
+        <li><%= link_to page.data.title, page.path %></li>
+      <% end %>
+    </ul>
+  <% end %>
+<% end %>
+
+<style media="screen">
+  #content ul:first-of-type {
+    padding-bottom: 40px;
+    border-bottom: 2px solid #333;
+  }
+</style>

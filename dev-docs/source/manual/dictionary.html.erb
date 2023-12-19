@@ -1,0 +1,40 @@
+---
+title: Dictionary of concepts on GOV.UK
+parent: /manual.html
+layout: false
+section: Learning GOV.UK
+type: learn
+source_url: https://github.com/alphagov/govuk-developer-docs/blob/main/data/dictionary.yml
+---
+
+<% content_for :sidebar do %>
+  <ul>
+    <li>
+      <a href='/manual.html'>&lsaquo; Manual</a>
+      <%= link_to 'Dictionary', '/manual/dictionary.html' %>
+      <ul>
+      <% data.dictionary.each do |entry| %>
+        <li>
+          <%= link_to entry.word, "##{entry.word.parameterize}-definition" %>
+        </li>
+      <% end %>
+      </ul>
+    </li>
+  </ul>
+<% end %>
+
+<% wrap_layout :core do %>
+  <%= partial 'partials/header' %>
+
+  <% data.dictionary.each do |entry| %>
+    <div>
+      <h2 id=<%="#{entry.word.parameterize}"%>-definition>
+        <%= entry.word %>
+      </h2>
+      <% if entry.synonyms.present? %>
+        <small>Synonyms: <%= entry.synonyms %></small>
+      <% end %>
+      <p><%= entry.description %></p>
+    </div>
+  <% end %>
+<% end %>

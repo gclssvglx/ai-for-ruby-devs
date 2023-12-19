@@ -1,0 +1,116 @@
+---
+owner_slack: "#govuk-searchandnav"
+title: Reindex an Elasticsearch index
+section: Publishing
+layout: manual_layout
+parent: "/manual.html"
+related_repos: [search-api]
+---
+
+## When to reindex
+
+After updating an Elasticsearch index's schema by [changing the fields or
+document
+types](https://github.com/alphagov/search-api/blob/main/docs/adding-new-fields.md),
+you need to reindex the affected index before the new fields and types can be
+used.
+
+> ⚠️ **Avoid reindexing in production during working hours, except to fix an
+> outage.**
+>
+> Reindexing locks the index for writes, so content is not updated in the
+> search index. Reindexing takes around 2 hours to complete.
+>
+> See [Fix out-of-date search indices](fix-out-of-date-search-indices.html) if you
+> need to reindex during working hours.
+
+**You don't need to reindex when making a change to the govuk_document_types gem.**
+Instead, run the Rake task `search:update_supertypes` to update documents
+in-place. Updating supertypes can be done during working hours.
+
+## What the reindexing process does
+
+1. Locks the Elasticsearch index to prevent writes to the index while data is
+   being copied
+1. Creates a new index using the schema defined in the deployed version of
+   search-api
+1. Copies all the data from the old to the new index
+1. Compares the old and new data to check for inconsistencies
+1. If everything looks the same, switches the [index
+   alias](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html)
+   to the new index
+
+## Reindex an Elasticsearch index
+
+### 1. Run the reindex
+
+To reindex all indices, run the `search:migrate_schema` Rake task on search-api:
+
+<%= RunRakeTask.links("search-api", "search:migrate_schema") %>
+
+To reindex a specific index, specify the `SEARCH_INDEX` environment variable:
+
+<%= RunRakeTask.links("search-api", "SEARCH_INDEX=government search:migrate_schema") %>
+
+To monitor progress, you can check how many documents have been copied to the
+new index:
+
+```sh
+k exec deploy/search-api -- sh -c 'curl "$ELASTICSEARCH_URI/_cat/indices?v"'
+```
+
+### 2. Clean up
+
+Reindexing does not delete the old index. This lets us switch back to the old
+index if there is a serious problem with the new one.
+
+Once you're confident that the reindexing was successful, delete the old
+(unaliased) index using the `search:clean` Rake task:
+
+<%= RunRakeTask.links("search-api", "search:clean SEARCH_INDEX=alias_of_index_to_clean_up") %>
+
+Avoid leaving old indices around, otherwise we may run into storage limitations
+and be unable to index new documents.
+
+### Troubleshooting
+
+#### Failed to switch to new index
+
+The final part of the reindex is to switch Elasticsearch over to the newly created indexes. We've noticed recently that this isn't always successful. It appears that if content is written to the database while the reindex task is running, the task will fail at the end as it detects a difference in the data.
+
+**Re-running the reindex task usually fixes this.**
+
+#### To stop the reindexing job
+
+If you need to cancel the reindexing while it's in progress:
+
+1. Find the ID of the reindexing task:
+
+    ```sh
+    k exec deploy/search-api -- sh -c 'curl "$ELASTICSEARCH_URI/_tasks?actions=%2Areindex&pretty"'
+    ```
+
+1. Stop the task:
+
+    ```
+    k exec deploy/search-api -- sh -c 'curl -XPOST "$ELASTICSEARCH_URI/_tasks/<task_id>/_cancel"'
+    ```
+
+1. Unlock the old index by running the `search:unlock` Rake task:
+
+    <%= RunRakeTask.links("search-api", "search:unlock SEARCH_INDEX=alias_of_index_to_unlock") %>
+
+#### To switch back to the old index
+
+If you discover a problem after reindexing and need to switch back to the old
+index, run the `search:switch_to_named_index` Rake task:
+
+<%= RunRakeTask.links("search-api", "search:switch_to_named_index[full_index_name] SEARCH_INDEX=index_alias") %>
+
+where `full_index_name` is the full name of the new index, including the date
+and UUID, e.g. `govuk-2018-01-29t17:08:21z-31f39bdb-c62b-4607-8081-19ea87fb1498`.
+
+Switching back to an old index means that you'll **lose any content updates**
+that were published while the new index was live. To fix this, [re-present the
+changes](fix-out-of-date-search-indices.html) from both publishing-api and
+Whitehall.

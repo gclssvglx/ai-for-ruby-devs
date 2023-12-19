@@ -1,0 +1,52 @@
+---
+layout: document_type_layout
+parent: /document-types.html
+---
+
+There are <strong><%= page.total_count %></strong> pages with document type
+'<%= page.name %>' in the GOV.UK search index.
+
+## Rendering apps
+
+<% if page.rendering_apps.any? %>
+This document type is rendered by:
+
+<% page.rendering_apps.each do |rendering_app| %>
+- <%= link_to rendering_app, "/repos/#{rendering_app}.html" %>
+<% end %>
+<% else %>
+This document type is not rendered by any apps. This could mean that the document
+type is not meant to be rendered (a redirect for example), or that there aren't
+actually any pages with this document type.
+<% end %>
+
+## Supertypes
+
+| Type | Group |
+| --- | --- |
+<% Supertypes.all.each do |supertype| %>
+| <%= link_to supertype.name, "/document-types/#{supertype.id}.html" %> | <%= supertype.for_document_type(page.name) %> |
+<% end %>
+
+## Content schemas
+
+<% if page.schemas.any? %>
+This document type is allowed by the schema:
+
+<% page.schemas.each do |schema| %>
+- <%= link_to schema, "/content-schemas/#{schema}.html" %>
+<% end %>
+<% else %>
+This document type is not allowed by any schemas. This will mean it can't
+be published and may be deleteable.
+<% end %>
+
+<% if page.examples.any? %>
+## Example pages
+
+<% page.examples.each do |example| %>
+- <%= link_to example['title'], "https://www.gov.uk#{example['link']}" %>
+<% end %>
+
+<%= link_to 'Source query from Search API', page.search_url %>
+<% end %>
