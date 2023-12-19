@@ -2,7 +2,8 @@ require "openai"
 
 class OpenAiApi
   def ask_question(question)
-    context = create_context(question)
+    context = create_context_from_document(question)
+    # context = create_context_from_chunk(question)
 
     prompt = <<~CONTENT
       Answer the question based on the context below.
@@ -23,8 +24,16 @@ class OpenAiApi
     ).dig("data", 0, "embedding")
   end
 
-  def create_context(question)
-    ContentItem.nearest_neighbors(
+  def create_context_from_document(question)
+    Document.nearest_neighbors(
+      :embedding,
+      get_embedding_for(question),
+      distance: ENV["EMBEDDING_DISTANCE"]
+    ).first(1).map(&:content)
+  end
+
+  def create_context_from_chunk(question)
+    Chunk.nearest_neighbors(
       :embedding,
       get_embedding_for(question),
       distance: ENV["EMBEDDING_DISTANCE"]

@@ -6,7 +6,8 @@ require "neighbor"
 require "sinatra"
 
 require_relative "src/open_ai_api"
-require_relative "src/content_item"
+require_relative "src/document"
+require_relative "src/chunk"
 
 ActiveRecord::Base.establish_connection(
   adapter: ENV["DB_ADAPTER"],
