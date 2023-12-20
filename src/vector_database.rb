@@ -5,21 +5,10 @@ class VectorDatabase
     @open_ai_api = OpenAiApi.new
   end
 
-  def load_document(content, content_source)
+  def load_content(klass, content, content_source, document = nil)
     embedding = open_ai_api.get_embedding_for(content)
-    Document.create!(
-      content: content,
-      embedding: embedding,
-      content_source: content_source
-    )
-  end
-
-  def load_chunk(content, document)
-    embedding = open_ai_api.get_embedding_for(content)
-    Chunk.create!(
-      document: document,
-      content: content,
-      embedding: embedding
-    )
+    data = { content: content, embedding: embedding, content_source: content_source }
+    data[:document] = document unless document.nil?
+    klass.create!(data)
   end
 end

@@ -2,8 +2,8 @@ require "openai"
 
 class OpenAiApi
   def ask_question(question)
-    context = create_context_from_document(question)
-    # context = create_context_from_chunk(question)
+    context = create_context(Document, question)
+    # context = create_context(Chunk, question)
 
     prompt = <<~CONTENT
       Answer the question based on the context below.
@@ -24,16 +24,8 @@ class OpenAiApi
     ).dig("data", 0, "embedding")
   end
 
-  def create_context_from_document(question)
-    Document.nearest_neighbors(
-      :embedding,
-      get_embedding_for(question),
-      distance: ENV["EMBEDDING_DISTANCE"]
-    ).first(1).map(&:content)
-  end
-
-  def create_context_from_chunk(question)
-    Chunk.nearest_neighbors(
+  def create_context(klass, question)
+    klass.nearest_neighbors(
       :embedding,
       get_embedding_for(question),
       distance: ENV["EMBEDDING_DISTANCE"]
@@ -48,8 +40,6 @@ class OpenAiApi
         temperature: ENV["CHAT_TEMPERATURE"].to_f
       }
     )
-    puts "You asked : #{prompt}"
-    puts "I answered : #{answer}"
     answer.dig("choices", 0, "message", "content") || answer.dig("error", "message")
   end
 
