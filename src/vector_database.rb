@@ -2,7 +2,7 @@ class VectorDatabase
   attr_reader :open_ai_api
 
   def initialize
-    @open_ai_api = OpenAiApi.new
+    @open_ai_api = OpenAiApi.new(nil, nil)
   end
 
   def load_content(klass, content, content_source, document = nil)
